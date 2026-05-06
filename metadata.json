@@ -1,0 +1,10 @@
+{
+  "name": "Remix: EduGate THCS - Website Trường học Thông minh",
+  "description": "Website giáo dục toàn diện dành cho trường Trung học cơ sở, tích hợp quản lý tài liệu, thời khóa biểu và Chatbot AI hỗ trợ học tập.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}

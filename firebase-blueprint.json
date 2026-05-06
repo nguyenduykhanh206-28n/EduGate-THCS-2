@@ -1,0 +1,129 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "teacher", "student", "parent"] },
+        "classId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "News": {
+      "title": "News",
+      "description": "News and announcements",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "category": { "type": "string", "enum": ["notification", "activity", "event", "schedule"] },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isFeatured": { "type": "boolean" }
+      },
+      "required": ["title", "content", "category", "authorId"]
+    },
+    "Material": {
+      "title": "Material",
+      "description": "Educational materials",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "fileType": { "type": "string" },
+        "category": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "fileUrl", "teacherId"]
+    },
+    "Timetable": {
+      "title": "Timetable",
+      "description": "Class timetable",
+      "type": "object",
+      "properties": {
+        "classId": { "type": "string" },
+        "data": { "type": "object" },
+        "updatedBy": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["classId", "data"]
+    },
+    "Video": {
+      "title": "Video",
+      "description": "Educational videos",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "youtubeId": { "type": "string" },
+        "description": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "youtubeId"]
+    },
+    "Contact": {
+      "title": "Contact",
+      "description": "Contact form submissions",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "replied"] }
+      },
+      "required": ["name", "email", "message"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "A single message in an AI chat session",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "model"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
+      },
+      "required": ["text", "role", "timestamp", "userId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/users/{userId}/chats/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "User-specific AI chat history"
+    },
+    "/news/{newsId}": {
+      "schema": "News",
+      "description": "School news and announcements"
+    },
+    "/materials/{materialId}": {
+      "schema": "Material",
+      "description": "Documents and learning materials"
+    },
+    "/timetables/{classId}": {
+      "schema": "Timetable",
+      "description": "Schedules by class"
+    },
+    "/videos/{videoId}": {
+      "schema": "Video",
+      "description": "Video library"
+    },
+    "/contacts/{contactId}": {
+      "schema": "Contact",
+      "description": "Feedback and contact requests"
+    }
+  }
+}

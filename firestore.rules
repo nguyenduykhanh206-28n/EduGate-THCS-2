@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasRole(role) {
+      return isSignedIn() && getUserData().role == role;
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    function isTeacher() {
+      return hasRole('teacher') || isAdmin();
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Users ---
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(userId) && 
+        incoming().keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
+        (incoming().role == 'student' || (incoming().role == 'admin' && request.auth.token.email == 'duykhanh.nguyen7@gmail.com')) &&
+        incoming().uid == userId;
+      allow update: if isOwner(userId) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'role']) &&
+        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL']) || (incoming().role == 'admin' && request.auth.token.email == 'duykhanh.nguyen7@gmail.com'))
+      );
+      allow write: if isAdmin();
+    }
+
+    match /users/{userId}/chats/{messageId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && 
+        incoming().userId == userId &&
+        incoming().role in ['user', 'model'] &&
+        incoming().timestamp == request.time &&
+        incoming().text is string && 
+        incoming().text.size() > 0 &&
+        incoming().text.size() <= 4096;
+    }
+
+    // --- News ---
+    match /news/{newsId} {
+      allow read: if true;
+      allow create: if isTeacher() && 
+        isValidId(newsId) &&
+        incoming().keys().hasAll(['title', 'content', 'category', 'authorId', 'createdAt']) &&
+        incoming().title is string && incoming().title.size() <= 256;
+      allow update: if isTeacher() &&
+        incoming().authorId == existing().authorId;
+      allow delete: if isAdmin();
+    }
+
+    // --- Materials ---
+    match /materials/{materialId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() &&
+        incoming().keys().hasAll(['title', 'fileUrl', 'teacherId', 'createdAt']) &&
+        incoming().title is string && incoming().title.size() <= 256;
+      allow update: if isTeacher() &&
+        incoming().teacherId == existing().teacherId;
+      allow delete: if isAdmin();
+    }
+
+    // --- Timetables ---
+    match /timetables/{classId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // --- Videos ---
+    match /videos/{videoId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // --- Contacts ---
+    match /contacts/{contactId} {
+      allow create: if true; // Public feedback
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}
